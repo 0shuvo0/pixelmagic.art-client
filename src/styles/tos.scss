@@ -1,0 +1,30 @@
+.tos-content{
+    h1{
+        font-size: 48px;
+        margin-bottom: 12px;
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 500;
+    }
+    .mb-3{
+        margin-bottom: 44px;
+    }
+    h2{
+        margin-top: 24px;
+    }
+    p{
+        opacity: .8;
+        line-height: 1.5
+    }
+    ul{
+        padding-left: 32px;
+
+        margin-top: 12px;
+        li{
+            margin-bottom: 6px;
+        }
+    }
+    a{
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+}
