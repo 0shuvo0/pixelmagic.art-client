@@ -1,3 +1,43 @@
+.user-info{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    .dp{
+        width: 55px;
+        height: 55px;
+
+        border-radius: 12px;
+    }
+    .credit-box{
+        background-color: #a159ff2f;
+        padding: 8px 12px;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        .count{
+            font-size: 24px;
+            font-family: 'Fredoka';
+        }
+        .buy-credits-btn{
+            height: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            svg{
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+                path{
+                    fill: var(--color-primary);
+                }
+            }
+        }
+    }
+    .logout-btn{
+        height: 32px;
+
+    }
+}
+
+
 .app-section-img-upload{
     min-height: calc(100dvh - 100px);
     display: flex;
@@ -262,6 +302,232 @@
 
 
 
+.modal-wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, .15);
+    backdrop-filter: blur(5px);
+}
+.modal-content{
+    width: 90%;
+    background-color: #fff;
+    max-width: 500px;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .07);
+    position: relative;
+    animation: .5s popIn;
+    max-height: 100dvh;
+    overflow: auto;
+    .modal-close-btn{
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        cursor: pointer;
+    }
+}
+@keyframes popIn{
+    from{
+        opacity: 0;
+        transform: scale(.6) translateY(100px);
+    }
+}
+
+
+
+ @keyframes svg-text-anim {
+    40% {
+       stroke-dashoffset: 0;
+       fill: transparent;
+     }
+     60% {
+       stroke-dashoffset: 0;
+       fill: var(--color-accent);
+     }
+     100% {
+       stroke-dashoffset: 0;
+       fill: var(--color-accent);
+     }
+     
+ }
+
+ .loding-text{
+    svg{
+        width: 80vw;
+        max-width: 600px;
+        height: auto;
+    }
+    .text{
+        text-align: center;
+        color: var(--color-primary);
+        font-size: 24px;
+        font-family: 'Fredoka', sans-serif;
+        font-weight: 600;
+        letter-spacing: 1px;
+        word-spacing: 2px;
+    }
+ }
+
+
+#login-modal{
+    .title{
+        font-size: 36px;
+        font-weight: 600;
+        line-height: 1.25;
+        span{
+            font-weight: 800;
+            color: var(--color-accent);
+            // font-family: 'Pacifico';
+        }
+    }
+    .login-btn{
+        padding: 12px;
+        padding-right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background-color: #fff;
+        border: 1px solid #c1c1c1;
+        color: var(--color-text);
+        font-size: 24px;
+        margin: auto;
+        margin-top: 2em;
+    }
+    .info-text{
+        text-align: center;
+        max-width: 300px;
+        margin: auto;
+        margin-top: 14px;
+        margin-bottom: 2em;
+        font-size: 14px;
+        line-height: 1.35;
+        a{
+            text-decoration: none;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+    }
+}
+
+
+
+#buy-credits-modal{
+    .title{
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 6px;
+    }
+    .subtitle{
+        opacity: .8;
+        line-height: 1.25;
+    }
+    #buy-credit-btn{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        gap: 12px;
+        background-color: var(--color-primary);
+    }
+}
+
+.credit-packs-container{
+    margin-top: 2em;
+}
+.credit-pack{
+    border: 1px solid #d7b8ff;
+    padding: 16px;
+    border-radius: 12px;
+    background-color: var(--color-background);
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    margin-bottom: 20px;
+    isolation: isolate;
+    &:last-child{
+        margin-bottom: 0;
+    }
+    .check-icon{
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: none;
+    }
+    .price{
+        font-size: 28px;
+        font-family: 'Fredoka', sans-serif;
+        color: var(--color-accent);
+        font-weight: 500;
+    }
+    .pack-title{
+        font-weight: 600;
+        font-size: 20px;
+        margin-top: 2px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        span{
+            color: var(--color-accent);
+            font-weight: 700;
+        }
+    }
+    .pack-nav{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .highlight-badge{
+        display: inline-block;
+        background-color: var(--color-primary);
+        color: #fff;
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+
+    &::before, &::after{
+        content: '';
+        position: absolute;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+        bottom: 0;
+        right: 0;
+        transform: translateX(50%);
+        opacity: .1;
+        transition: opacity .3s;
+        z-index: -1;
+    }
+    &::after{
+        bottom: auto;
+        top: 30%;
+        right: 30px;
+        width: 300px;
+        height: 300px;
+        background-color: var(--color-accent);
+    }
+
+    &.active{
+        border: 1px solid var(--color-primary);
+        .check-icon{
+            display: block;
+        }
+        &::before, &::after{
+            opacity: .8;
+        }
+    }
+
+}
+
+
+
+
 
 
 
@@ -292,6 +558,21 @@
     }
     .img-drop-zone{
         width: 100%;
+    }
+}
+
+@media screen and (max-width: 576px){
+    .modal-content{
+        width: 96%;
+    }
+    #login-modal{
+        .login-btn{
+            gap: 6px;
+            font-size: 16px;
+        }
+    }
+    .navbar .logo img{
+        width: 60px;
     }
 }
 
