@@ -53,6 +53,9 @@ img{
 .text-center{
     text-align: center;
 }
+.d-none{
+    display: none !important;
+}
 
 .nav{
     display: flex;
@@ -99,6 +102,11 @@ img{
             border: 2px solid var(--color-text);
             color: var(--color-text);
         }
+    }
+    &.disabled{
+        pointer-events: none;
+        opacity: .35;
+        background-color: var(--color-text);
     }
 }
 
