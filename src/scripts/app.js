@@ -34,13 +34,14 @@ selectImgBtn.addEventListener('click', () => {
 
 
     editingImg.src = img
+    editingImg.setAttribute('data-imgname', file.name)
     $(".app-section-img-upload").remove()
     $(".app-section").classList.remove('d-none')
     // initApp()
-    setTimeout(initApp, 500)
+    setTimeout(initSpeechRecognition, 500)
 })
 
-function initApp(){
+function initSpeechRecognition(){
     const speechRecognition = new SpeechRecognition()
 
     try{
@@ -87,16 +88,55 @@ function initApp(){
 
 }
 
+
 const loadingModal = $("#page-loading-modal")
 
 async function generateEdit(prompt){
+    if(!prompt){
+        alert("No edit asked")
+        return
+    }
+
+    const currentCredit = parseInt($('.count', userInfoContainer).innerText)
+    if(!currentCredit || currentCredit <= 0){
+        !(buyCreditsModal.classList.contains('d-none')) && buyCreditsModal.classList.remove('d-none');
+        return
+    }
+    
     loadingModal.classList.remove("d-none")
-
-    const img = editingImg.src
-    await getImageEdit(img, prompt)
-
+    try{
+    
+        const img = editingImg.src
+        if(!img){
+            alert("No Image Found")
+            return
+        }
+        const newimg = await getImageEdit(img, prompt ,editingImg.getAttribute('data-imgname'))
+        if(newimg){
+            editingImg.src = 'data:image/png;base64,' + newimg
+            $('.count', userInfoContainer).innerText = currentCredit - 1
+        }else{
+            alert("Something went wrong")
+        }
+    
+    }catch(err){
+        alert(err.message || "Error getting edit")
+        console.log(err)
+    }
     loadingModal.classList.add("d-none")
 }
+
+const promptSendBtn = $(".prompt-input .send-icon")
+promptSendBtn.addEventListener('click', async () => {
+    const p = promptInput.value.trim()
+    if(!p) return
+    await generateEdit(p)
+    promptInput.value = ''
+    
+})
+
+
+
 
 $$('.modal-wrapper').forEach(m => {
     const closeBtns = $$(".modal-close-btn", m)
@@ -142,16 +182,22 @@ loginBtn.addEventListener('click', async () => {
 
 
 
-let selectedPackage = 'basic'
+let selectedPackage = 'pro'
 const creditPacks = $$(".credit-packs-container .credit-pack")
 const buyNowBtn = $("#buy-credit-btn")
 
+const packSelectSounds = {
+    trial: new Audio('/audio/pack_select_trial.mp3'),
+    standard: new Audio('/audio/pack_select_standard.mp3'),
+    pro: new Audio('/audio/pack_select_pro.mp3')
+}
 
 creditPacks.forEach(pack => {
     pack.addEventListener('click', () => {
         creditPacks.forEach(pack => pack.classList.remove('active'))
         pack.classList.add('active')
         selectedPackage = pack.getAttribute('data-name')
+        packSelectSounds[selectedPackage].play()
     })
 })
 
@@ -161,12 +207,22 @@ buyNowBtn.addEventListener('click', async () => {
 
     try{
         const url = await getCreditPurchaseUrl(selectedPackage)
-        window.location.href = url
+        if(url){
+            window.location.href = url
+        }else{
+            alert('Something went wrong')
+        }
     }catch(err){
         alert('Something went wrong')
         console.log(err)
     }
 
-    buyNowBtn.innerHTML = 'Processing ...'
+    buyNowBtn.innerHTML = `<span>Buy Now</span>
+            <svg fill="#000000" height="20px" width="20px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+              viewBox="0 0 330 330" xml:space="preserve">
+              <path id="XMLID_27_" d="M15,180h263.787l-49.394,49.394c-5.858,5.857-5.858,15.355,0,21.213C232.322,253.535,236.161,255,240,255
+                s7.678-1.465,10.606-4.394l75-75c5.858-5.857,5.858-15.355,0-21.213l-75-75c-5.857-5.857-15.355-5.857-21.213,0
+                c-5.858,5.857-5.858,15.355,0,21.213L278.787,150H15c-8.284,0-15,6.716-15,15S6.716,180,15,180z" fill="#fff" />
+            </svg>`
     buyNowBtn.classList.remove('disabled')
 })
