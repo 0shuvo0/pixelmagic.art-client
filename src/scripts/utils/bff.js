@@ -1,4 +1,5 @@
 const BASE_URL = 'http://localhost:3000'
+// const BASE_URL = ''
 
 import { auth } from "./firebase"
 import { base64ToFile } from './utils.js'
@@ -14,10 +15,8 @@ async function getImageEdit(img, prompt, fileName = 'img.png'){
 
     fromData.append('prompt', prompt)
 
-    console.log(34)
     const file = await base64ToFile(img, fileName)
     fromData.append('photo', file, fileName)
-    console.log(file)
 
     const res = await fetch(BASE_URL + '/get-edit', {
         method: 'POST',
