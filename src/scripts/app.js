@@ -12,7 +12,7 @@ import SpeechRecognition from './utils/scpeech-recognition.js'
 
 import './utils/img-upload.js'
 
-import { getImageEdit, getUserCredits, getCreditPurchaseUrl } from './utils/bff.js'
+import { getImageEdit, getUserCredits, getCreditPurchaseUrl, getSRToken} from './utils/bff.js'
 
 import { downloadBase64Image } from './utils/utils.js'
 
@@ -28,70 +28,105 @@ const promptInput = $("#prompt-input")
 const selectImgBtn = $("#select-image-btn")
 const editingImg = $("#editing-img")
 
+const loadingModal = $("#page-loading-modal")
+
 selectImgBtn.addEventListener('click', () => {
     const img = $("#user-selected-photo").src
     const file = $(".user-selected-photo-input").files[0]
     
     if(!img || !file) return alert("Please select an image to edit")
+    
 
+    loadingModal.classList.remove('d-none')
 
     editingImg.src = img
     editingImg.setAttribute('data-imgname', file.name)
     $(".app-section-img-upload").remove()
     $(".app-section").classList.remove('d-none')
     // initApp()
-    setTimeout(initSpeechRecognition, 500)
+    setTimeout(initApp, 500)
 })
 
-function initSpeechRecognition(){
+async function initApp(){
     const speechRecognition = new SpeechRecognition()
 
     try{
-        if(!speechRecognition.isSupported()){
+        if(!navigator.mediaDevices){
             no_browser_support_sound.play()
             micWrapper.remove()
             speechRecognition.destroy()
+            !loadingModal.classList.contains('d-none') && loadingModal.classList.add('d-none');
             return
         }
+
+        const token = await getSRToken()
+
+        !loadingModal.classList.contains('d-none') && loadingModal.classList.add('d-none');
+
+        initSpeechRecognition(token)
     
-        speechRecognition.start({
-            onStart: () => {
-                    micWrapper.classList.remove('disabled')
-                    micInfo.innerText = 'Listening ...'
-                    mic_on_sound.play()
-            },
-            onResult: res => {
-                promptInput.value = res
-            },
-            onStop: (final) => {
-                speechRecognition.pause()
-                if(final.split(' ').length < 2){
-                    setTimeout(() => {
-                        prompt.innerText = ''
-                        speechRecognition.resume()
-                    }, 300)
-                    return
-                }
+        // speechRecognition.start({
+        //     onStart: () => {
+        //             micWrapper.classList.remove('disabled')
+        //             micInfo.innerText = 'Listening ...'
+        //             mic_on_sound.play()
+        //     },
+        //     onResult: res => {
+        //         promptInput.value = res
+        //     },
+        //     onStop: (final) => {
+        //         speechRecognition.pause()
+        //         if(final.split(' ').length < 2){
+        //             setTimeout(() => {
+        //                 prompt.innerText = ''
+        //                 speechRecognition.resume()
+        //             }, 300)
+        //             return
+        //         }
     
-                !micWrapper.classList.contains('disabled') && micWrapper.classList.add('disabled')
-                micInfo.innerText = 'muted'
+        //         !micWrapper.classList.contains('disabled') && micWrapper.classList.add('disabled')
+        //         micInfo.innerText = 'muted'
                 
-                generateEdit(final).finally(() => {
-                    promptInput.innerText = ''
-                    speechRecognition.resume()
-                })
-            }
-        })
+        //         generateEdit(final).finally(() => {
+        //             promptInput.innerText = ''
+        //             speechRecognition.resume()
+        //         })
+        //     }
+        // })
     }catch(err){
         micWrapper.remove()
-        speechRecognition.destroy()
         mic_error_sound.play()
+        console.log(err)
     }
-
 }
 
+function initSpeechRecognition(token){
+    const recognition = new SpeechRecognition()
+    recognition.init(token, {
+        onInit: () => {
+            micWrapper.classList.remove('disabled')
+            micInfo.innerText = 'Listening ...'
+            mic_on_sound.play()
+        },
+        onTranscript: e => promptInput.value = e,
+        onCompleteSentence: e => {
+            !micWrapper.classList.contains ('disabled') && micWrapper.classList.add('disabled')
+            micInfo.innerText = '...'
+            recognition.stop()
 
-const loadingModal = $("#page-loading-modal")
+            generateEdit(e)
+        },
+        onClose: e => closeSR(e),
+        onError: e => closeSR(e)
+    })
+
+    function closeSR(err){
+        recognition.stop()
+        micWrapper.remove()
+        mic_error_sound.play()
+    }
+}
+
 
 async function generateEdit(prompt){
     if(!prompt){
@@ -113,20 +148,23 @@ async function generateEdit(prompt){
             alert("No Image Found")
             return
         }
-        const newimg = await getImageEdit(img, prompt ,editingImg.getAttribute('data-imgname'))
-        if(newimg){
-            addToHistory('data:image/png;base64,' + newimg)
-            editingImg.src = 'data:image/png;base64,' + newimg
-            editingImg.setAttribute('data-imgname', 'picmagic.png')
-            $('.count', userInfoContainer).innerText = currentCredit - 1
-        }else{
-            alert("Something went wrong")
+        const {newimg, newToken} = await getImageEdit(img, prompt, editingImg.getAttribute('data-imgname'))
+        
+        if(!newimg){
+            return alert("Something went wrong")
         }
-    
+
+        addToHistory('data:image/png;base64,' + newimg)
+        editingImg.src = 'data:image/png;base64,' + newimg
+        editingImg.setAttribute('data-imgname', 'picmagic.png')
+        $('.count', userInfoContainer).innerText = currentCredit - 1
+        
+        if(newToken && navigator.mediaDevices) initSpeechRecognition(newToken)
     }catch(err){
         alert(err.message || "Error getting edit")
         console.log(err)
     }
+    promptInput.value = ''
     loadingModal.classList.add("d-none")
 }
 
@@ -223,7 +261,11 @@ loginBtn.addEventListener('click', async () => {
     loginBtn.classList.add('remove')
 })
 
-
+const logoutBtn = $(".logout-btn")
+logoutBtn.addEventListener('click', async () => {
+    await auth.signOut()
+    window.location.href = '/index..html'
+})
 
 
 let selectedPackage = 'pro'

@@ -1,5 +1,5 @@
-const BASE_URL = 'http://localhost:3000'
-// const BASE_URL = ''
+// const BASE_URL = 'http://localhost:3000'
+const BASE_URL = ''
 
 import { auth } from "./firebase"
 import { base64ToFile } from './utils.js'
@@ -17,6 +17,7 @@ async function getImageEdit(img, prompt, fileName = 'img.png'){
 
     const file = await base64ToFile(img, fileName)
     fromData.append('photo', file, fileName)
+    fromData.append('newToken', !!navigator.mediaDevices)
 
     const res = await fetch(BASE_URL + '/get-edit', {
         method: 'POST',
@@ -85,8 +86,38 @@ async function getCreditPurchaseUrl(pack) {
         return content
 }
 
+async function getSRToken(){
+    try{
+        const user = auth.currentUser
+        if(!user) return
+
+        const token = await user.getIdToken()
+        if(!token) return
+
+        const res = await fetch(BASE_URL + '/get-sr-token', {
+            method: 'GET',
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+
+        const { success, message, content } = await res.json()
+
+        if(!success){
+            alert(message || "Something went wrong")
+            return
+        }
+
+        return content
+    }catch(err){
+        console.log(err)
+        alert("Something went wrong")
+    }
+}
+
 export {
     getImageEdit,
     getUserCredits,
-    getCreditPurchaseUrl
+    getCreditPurchaseUrl,
+    getSRToken
 }
