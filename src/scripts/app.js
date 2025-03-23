@@ -12,11 +12,49 @@ import SpeechRecognition from './utils/scpeech-recognition.js'
 
 import './utils/img-upload.js'
 
-import { getImageEdit, getUserCredits, getCreditPurchaseUrl, getSRToken} from './utils/bff.js'
+import { getImageEdit, getUserCredits, getSRToken} from './utils/bff.js'
 
 import { downloadBase64Image } from './utils/utils.js'
 
 import { auth, signIn } from './utils/firebase.js'
+
+import { initializePaddle }  from '@paddle/paddle-js'
+
+initializePaddle({
+    token: 'test_c7c07ea3a5a90a2c2962dc2532d',
+    environment: 'sandbox',
+    eventCallback: e => {
+        if(e.name !== 'checkout.completed') return
+        const add_credit = parseInt(e.data.items[0].product.name.split(" ")[0])
+
+        let prev_credit = 0
+        try{
+            prev_credit = parseInt($('.credit-box .count').innerText)
+        }catch(e){
+            prev_credit = 0
+        }
+
+        $('.credit-box .count').innerText = prev_credit + add_credit
+    }
+}).then(p => {
+    window.paddle = p
+
+    setTimeout(() => {
+        if(!auth.currentUser) return
+    
+        const urlParams = new URLSearchParams(window.location.search)
+        const buyNow = urlParams.get('buy-now')?.trim()
+        console.log(buyNow)
+        if(buyNow){
+            openPaddleCheckout(buyNow)
+    
+            //remove buy-now query param without reloading page
+            urlParams.delete('buy-now'); // Remove the parameter
+            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState({}, '', newUrl.endsWith('?') ? newUrl.slice(0, -1) : newUrl);
+        }
+    }, 500)
+})
 
 const mic_on_sound = new Audio('/audio/mic-on.wav')
 const mic_error_sound = new Audio('/audio/mic-error.mp3')
@@ -159,7 +197,10 @@ async function generateEdit(prompt){
         editingImg.setAttribute('data-imgname', 'picmagic.png')
         $('.count', userInfoContainer).innerText = currentCredit - 1
         
-        if(newToken && navigator.mediaDevices) initSpeechRecognition(newToken)
+        if(newToken && navigator.mediaDevices){
+            micInfo.innerText = 'Loading ...'
+            initSpeechRecognition(newToken)
+        }
     }catch(err){
         alert(err.message || "Error getting edit")
         console.log(err)
@@ -287,28 +328,58 @@ creditPacks.forEach(pack => {
     })
 })
 
+
 buyNowBtn.addEventListener('click', async () => {
-    buyNowBtn.innerHTML = 'Processing ...'
-    buyNowBtn.classList.add('disabled')
-
-    try{
-        const url = await getCreditPurchaseUrl(selectedPackage)
-        if(url){
-            window.location.href = url
-        }else{
-            alert('Something went wrong')
-        }
-    }catch(err){
-        alert('Something went wrong')
-        console.log(err)
-    }
-
-    buyNowBtn.innerHTML = `<span>Buy Now</span>
-            <svg fill="#000000" height="20px" width="20px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-              viewBox="0 0 330 330" xml:space="preserve">
-              <path id="XMLID_27_" d="M15,180h263.787l-49.394,49.394c-5.858,5.857-5.858,15.355,0,21.213C232.322,253.535,236.161,255,240,255
-                s7.678-1.465,10.606-4.394l75-75c5.858-5.857,5.858-15.355,0-21.213l-75-75c-5.857-5.857-15.355-5.857-21.213,0
-                c-5.858,5.857-5.858,15.355,0,21.213L278.787,150H15c-8.284,0-15,6.716-15,15S6.716,180,15,180z" fill="#fff" />
-            </svg>`
-    buyNowBtn.classList.remove('disabled')
+    
+    openPaddleCheckout(selectedPackage)
+    
+    buyCreditsModal.classList.add("d-none")
 })
+
+const packs = {
+    trial: {
+        name: 'trial',
+        price: 1.99,
+        credit: 10,
+        productId: 'pro_01jpsnj5ewkgw1avs1q5rtnwwj',
+        priceId: 'pri_01jpsnmw6ygkg5vv4w2s0j1rnr',
+
+    },
+    standard: {
+        name: 'Standard',
+        price: 4.99,
+        credit: 30,
+        productId: 'pro_01jpsnp26ns8bbc418a2a5yxjq',
+        priceId: 'pri_01jpsnpyw1ty4b8n6fq49xhtzd',
+    },
+    pro: {
+        name: 'pro',
+        price: 9.99,
+        credit: 150,
+        productId: 'pro_01jpsnr6n7y77sjtsz6dnmvg43',
+        priceId: 'pri_01jpsntqk5v0wgf2xptej9r2ps',
+    }
+}
+
+function openPaddleCheckout(selectedPackage){
+    if(!auth.currentUser || !window.paddle) return
+
+    window.c = window.paddle.Checkout.open({
+        settings: {
+          displayMode: "overlay",
+          theme: "light",
+          locale: "en",
+        },
+        customer: { email: auth.currentUser.email},
+        customData: {
+            email: auth.currentUser.email
+        },
+        items: [
+            {
+                priceId: packs[selectedPackage].priceId,
+                quantity: 1
+            }
+        ]
+    })
+    
+}

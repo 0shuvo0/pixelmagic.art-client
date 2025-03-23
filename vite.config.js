@@ -9,10 +9,12 @@ export default defineConfig({
         app: resolve(__dirname, 'app.html'),
         privacyPolicy: resolve(__dirname, 'privacy-policy.html'),
         termsOfService: resolve(__dirname, 'terms-of-service.html'),
+        pricing: resolve(__dirname, 'pricing.html'),
 
         indexJs: resolve(__dirname, 'src/scripts/index.js'),
         appJs: resolve(__dirname, 'src/scripts/app.js'),
-        tosJs: resolve(__dirname, 'src/scripts/tos.js')
+        tosJs: resolve(__dirname, 'src/scripts/tos.js'),
+        pricingJs: resolve(__dirname, 'src/scripts/pricing.js')
       }
     },
   }
