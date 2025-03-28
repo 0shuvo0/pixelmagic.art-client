@@ -16,7 +16,7 @@ import { getImageEdit, getUserCredits, getSRToken} from './utils/bff.js'
 
 import { downloadBase64Image } from './utils/utils.js'
 
-import { auth, signIn } from './utils/firebase.js'
+import { auth, signIn, signupWithEmailPwd, loginWithEmailPwd } from './utils/firebase.js'
 
 import { initializePaddle }  from '@paddle/paddle-js'
 
@@ -383,3 +383,51 @@ function openPaddleCheckout(selectedPackage){
     })
     
 }
+
+
+
+const validateEmail = email => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    )
+}
+
+const joinBtn = $('#join-btn')
+joinBtn.addEventListener('click', async () => {
+    const email = $(".join-email-input").value.trim()
+    const password = $(".join-password-input").value.trim()
+
+    if(email.length < 5) return alert("Enter your email!")
+    if(password.length < 6) return alert("Your password should be atleast 6 characters long.")
+    if(!validateEmail(email)) return alert("Enter a valid email!")
+
+    joinBtn.disabled = true
+    loadingModal.classList.remove('d-none')
+    await signupWithEmailPwd(email, password)
+    
+    joinBtn.disabled = false
+    loadingModal.classList.add('d-none')
+})
+
+
+// Loggin in
+const loginBtn_emailpwd = $("#login-btn-emailpwd")
+
+loginBtn_emailpwd.addEventListener("click", async () => {
+    const email = $(".login-email-input").value.trim()
+    const password = $(".login-password-input").value.trim()
+
+    if(email.length < 5) return authError.innerText = "Enter your email!"
+    if(password.length < 6) return authError.innerText = "Your password should be atleast 6 characters long."
+    if(!validateEmail(email)) return authError.innerText = "Enter a valid email!"
+
+    loginBtn.disabled = true
+    loadingModal.classList.remove('d-none')
+    
+    await loginWithEmailPwd(email, password)
+
+    loginBtn.disabled = false
+    loadingModal.classList.add('d-none')
+})//2234459

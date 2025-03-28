@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { getAuth, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth"
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -24,7 +24,29 @@ async function signIn(){
     }
 }
 
+async function  signupWithEmailPwd(email, pwd) {
+    try{
+        await createUserWithEmailAndPassword(auth, email, pwd)
+    }catch(err){
+        alert("Error logging in!")
+        console.log(err)
+    }
+    
+}
+
+async function  loginWithEmailPwd(email, pwd) {
+    try{
+        await signInWithEmailAndPassword(auth, email, pwd)
+    }catch(err){
+        alert("Error logging in!")
+        console.log(err)
+    }
+    
+}
+
 export {
     auth,
-    signIn
+    signIn,
+    signupWithEmailPwd,
+    loginWithEmailPwd
 }
