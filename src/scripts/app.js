@@ -18,43 +18,43 @@ import { downloadBase64Image } from './utils/utils.js'
 
 import { auth, signIn, signupWithEmailPwd, loginWithEmailPwd } from './utils/firebase.js'
 
-import { initializePaddle }  from '@paddle/paddle-js'
+// import { initializePaddle }  from '@paddle/paddle-js'
 
-initializePaddle({
-    token: 'test_c7c07ea3a5a90a2c2962dc2532d',
-    environment: 'sandbox',
-    eventCallback: e => {
-        if(e.name !== 'checkout.completed') return
-        const add_credit = parseInt(e.data.items[0].product.name.split(" ")[0])
+// initializePaddle({
+//     token: 'test_c7c07ea3a5a90a2c2962dc2532d',
+//     environment: 'sandbox',
+//     eventCallback: e => {
+//         if(e.name !== 'checkout.completed') return
+//         const add_credit = parseInt(e.data.items[0].product.name.split(" ")[0])
 
-        let prev_credit = 0
-        try{
-            prev_credit = parseInt($('.credit-box .count').innerText)
-        }catch(e){
-            prev_credit = 0
-        }
+//         let prev_credit = 0
+//         try{
+//             prev_credit = parseInt($('.credit-box .count').innerText)
+//         }catch(e){
+//             prev_credit = 0
+//         }
 
-        $('.credit-box .count').innerText = prev_credit + add_credit
-    }
-}).then(p => {
-    window.paddle = p
+//         $('.credit-box .count').innerText = prev_credit + add_credit
+//     }
+// }).then(p => {
+//     window.paddle = p
 
-    setTimeout(() => {
-        if(!auth.currentUser) return
+//     setTimeout(() => {
+//         if(!auth.currentUser) return
     
-        const urlParams = new URLSearchParams(window.location.search)
-        const buyNow = urlParams.get('buy-now')?.trim()
-        console.log(buyNow)
-        if(buyNow){
-            openPaddleCheckout(buyNow)
+//         const urlParams = new URLSearchParams(window.location.search)
+//         const buyNow = urlParams.get('buy-now')?.trim()
+//         console.log(buyNow)
+//         if(buyNow){
+//             openCheckout(buyNow)
     
-            //remove buy-now query param without reloading page
-            urlParams.delete('buy-now'); // Remove the parameter
-            const newUrl = window.location.pathname + '?' + urlParams.toString();
-            window.history.replaceState({}, '', newUrl.endsWith('?') ? newUrl.slice(0, -1) : newUrl);
-        }
-    }, 500)
-})
+//             //remove buy-now query param without reloading page
+//             urlParams.delete('buy-now'); // Remove the parameter
+//             const newUrl = window.location.pathname + '?' + urlParams.toString();
+//             window.history.replaceState({}, '', newUrl.endsWith('?') ? newUrl.slice(0, -1) : newUrl);
+//         }
+//     }, 500)
+// })
 
 const mic_on_sound = new Audio('/audio/mic-on.wav')
 const mic_error_sound = new Audio('/audio/mic-error.mp3')
@@ -102,35 +102,6 @@ async function initApp(){
         !loadingModal.classList.contains('d-none') && loadingModal.classList.add('d-none');
 
         initSpeechRecognition(token)
-    
-        // speechRecognition.start({
-        //     onStart: () => {
-        //             micWrapper.classList.remove('disabled')
-        //             micInfo.innerText = 'Listening ...'
-        //             mic_on_sound.play()
-        //     },
-        //     onResult: res => {
-        //         promptInput.value = res
-        //     },
-        //     onStop: (final) => {
-        //         speechRecognition.pause()
-        //         if(final.split(' ').length < 2){
-        //             setTimeout(() => {
-        //                 prompt.innerText = ''
-        //                 speechRecognition.resume()
-        //             }, 300)
-        //             return
-        //         }
-    
-        //         !micWrapper.classList.contains('disabled') && micWrapper.classList.add('disabled')
-        //         micInfo.innerText = 'muted'
-                
-        //         generateEdit(final).finally(() => {
-        //             promptInput.innerText = ''
-        //             speechRecognition.resume()
-        //         })
-        //     }
-        // })
     }catch(err){
         micWrapper.remove()
         mic_error_sound.play()
@@ -331,7 +302,7 @@ creditPacks.forEach(pack => {
 
 buyNowBtn.addEventListener('click', async () => {
     
-    openPaddleCheckout(selectedPackage)
+    openCheckout(selectedPackage)
     
     buyCreditsModal.classList.add("d-none")
 })
@@ -341,46 +312,50 @@ const packs = {
         name: 'trial',
         price: 1.99,
         credit: 10,
-        productId: 'pro_01jpsnj5ewkgw1avs1q5rtnwwj',
-        priceId: 'pri_01jpsnmw6ygkg5vv4w2s0j1rnr',
-
+        dodo_pid: "pdt_yPr3FObq8F8uuz9f5uegt"
     },
     standard: {
         name: 'Standard',
         price: 4.99,
         credit: 30,
-        productId: 'pro_01jpsnp26ns8bbc418a2a5yxjq',
-        priceId: 'pri_01jpsnpyw1ty4b8n6fq49xhtzd',
+        dodo_pid: "pdt_OLQKxuDduoKg0oiJlVuSa"
     },
     pro: {
         name: 'pro',
         price: 9.99,
         credit: 150,
-        productId: 'pro_01jpsnr6n7y77sjtsz6dnmvg43',
-        priceId: 'pri_01jpsntqk5v0wgf2xptej9r2ps',
+        dodo_pid: "pdt_LiwBfNcGp4PhKqq5svk9q"
     }
 }
 
-function openPaddleCheckout(selectedPackage){
-    if(!auth.currentUser || !window.paddle) return
+function openCheckout(selectedPackage){
+    if(!auth.currentUser) return
 
-    window.c = window.paddle.Checkout.open({
-        settings: {
-          displayMode: "overlay",
-          theme: "light",
-          locale: "en",
-        },
-        customer: { email: auth.currentUser.email},
-        customData: {
-            email: auth.currentUser.email
-        },
-        items: [
-            {
-                priceId: packs[selectedPackage].priceId,
-                quantity: 1
-            }
-        ]
-    })
+    const email = encodeURIComponent(auth.currentUser.email);
+    const productId = packs[selectedPackage].dodo_pid;
+    const redirect_url = encodeURIComponent('https://www.picmagic.art/app.html')
+
+    const link = `https://checkout.dodopayments.com/buy/${productId}?quantity=1&redirect_url=${redirect_url}&email=${email}&disableEmail=true`
+    window.location.href = link
+
+
+    // window.c = window.paddle.Checkout.open({
+    //     settings: {
+    //       displayMode: "overlay",
+    //       theme: "light",
+    //       locale: "en",
+    //     },
+    //     customer: { email: auth.currentUser.email},
+    //     customData: {
+    //         email: auth.currentUser.email
+    //     },
+    //     items: [
+    //         {
+    //             priceId: packs[selectedPackage].priceId,
+    //             quantity: 1
+    //         }
+    //     ]
+    // })
     
 }
 
@@ -430,4 +405,5 @@ loginBtn_emailpwd.addEventListener("click", async () => {
 
     loginBtn.disabled = false
     loadingModal.classList.add('d-none')
-})//
+})
+

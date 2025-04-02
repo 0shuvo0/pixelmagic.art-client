@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /audio/
+Disallow: /images/
+Disallow: /audio-processor.js
+
+Sitemap: https://picmagic.art/sitemap.xml
